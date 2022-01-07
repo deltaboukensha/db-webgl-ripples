@@ -92,9 +92,7 @@ const loadShaderFragment = (sourceCode) => {
   return shader;
 };
 
-const loadShaderProgram = (vertexSource, fragmentSource) => {
-  const vertexShader = loadShaderVertex(vertexSource);
-  const fragmentShader = loadShaderFragment(fragmentSource);
+const loadShaderProgram = (vertexShader, fragmentShader) => {
   const shaderProgram = gl.createProgram();
   gl.attachShader(shaderProgram, vertexShader);
   gl.attachShader(shaderProgram, fragmentShader);
@@ -104,8 +102,6 @@ const loadShaderProgram = (vertexSource, fragmentSource) => {
     console.error("program", gl.getProgramInfoLog(shaderProgram));
     console.error("vertex", gl.getShaderInfoLog(vertexShader));
     console.error("fragment", gl.getShaderInfoLog(fragmentShader));
-    console.error(vertexSource);
-    console.error(fragmentSource);
   }
 
   return shaderProgram;
