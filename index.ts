@@ -54,14 +54,30 @@ const drawQuad = () => {
   );
 };
 
-const drawRender = () => {};
+const drawRender = () => {
+  gl.useProgram(programs.render.program);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, models.quad.bufferIndices);
+
+  const vertexAttribute = programs.render.attributeVertex;
+  gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(vertexAttribute);
+
+  gl.drawElements(
+    gl.TRIANGLES,
+    models.quad.dataIndices.length,
+    gl.UNSIGNED_SHORT,
+    0
+  );
+};
 
 const renderFrame = () => {
   gl.viewport(0, 0, canvasWidth, canvasHeight);
   gl.clearColor(0.529, 0.808, 0.922, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  drawQuad();
+  //drawQuad();
   drawRender();
 
   window.requestAnimationFrame(renderFrame);
@@ -168,6 +184,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   programs.render.program = loadShaderProgram(
     shaders.quad_vert,
     shaders.render_frag
+  );
+  programs.render.attributeVertex = getProgramAttribute(
+    programs.render.program,
+    "vertex"
   );
 
   document.body.appendChild(canvas);
