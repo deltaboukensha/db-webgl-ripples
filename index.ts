@@ -40,6 +40,10 @@ type FrameBuffer = {
 }
 const frameBuffers = [] as FrameBuffer[]
 
+const textures = {
+  background: null as WebGLTexture
+}
+
 const drawQuad = () => {
   gl.useProgram(programs.quad.program);
 
@@ -67,6 +71,9 @@ const drawRender = () => {
   const vertexAttribute = programs.render.attributeVertex;
   gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(vertexAttribute);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, textures.background);
 
   gl.drawElements(
     gl.TRIANGLES,
@@ -216,6 +223,29 @@ const loadFrameBuffer = () => {
   } as FrameBuffer
 }
 
+const loadImage = (url: string) => {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = function() {
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        image
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      resolve(texture);
+    };
+    image.src = url;
+  }) as Promise<WebGLTexture>;
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
   models.quad = loadModelQuad();
   shaders.quad_vert = loadShaderVertex(await loadSourceCode("quad.vert"));
@@ -240,6 +270,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   );
 
   frameBuffers.push(loadFrameBuffer());
+
+  textures.background = await loadImage("background.jpg")
 
   document.body.appendChild(canvas);
   window.requestAnimationFrame(renderFrame);
