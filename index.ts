@@ -27,12 +27,13 @@ const programs = {
   render: {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
-    uniformBackground: -1 as WebGLUniformLocation,
-    uniformWater: -1 as WebGLUniformLocation,
+    samplerBackground: -1 as WebGLUniformLocation,
+    samplerWater: -1 as WebGLUniformLocation,
   },
   water: {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
+    samplerPast: -1 as WebGLUniformLocation,
   },
   mouse: {
     program: null as WebGLProgram,
@@ -123,6 +124,28 @@ const drawMouse = () => {
   );
 };
 
+const drawWater = () => {
+  gl.useProgram(programs.water.program);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, models.quad.bufferIndices);
+
+  const vertexAttribute = programs.water.attributeVertex;
+  gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(vertexAttribute);
+
+  gl.uniform1i(programs.water.samplerPast, 0);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, frameBuffers[0].texture);
+
+  gl.drawElements(
+    gl.TRIANGLES,
+    models.quad.dataIndices.length,
+    gl.UNSIGNED_SHORT,
+    0
+  );
+};
+
 const drawRender = () => {
   gl.useProgram(programs.render.program);
 
@@ -133,11 +156,11 @@ const drawRender = () => {
   gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(vertexAttribute);
 
-  gl.uniform1i(programs.render.uniformBackground, 0);
+  gl.uniform1i(programs.render.samplerBackground, 0);
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, textures.background);
 
-  gl.uniform1i(programs.render.uniformWater, 1);
+  gl.uniform1i(programs.render.samplerWater, 1);
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, frameBuffers[0].texture);
 
@@ -153,21 +176,25 @@ const renderFrame = () => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
   gl.viewport(0, 0, canvasWidth, canvasHeight);
-  gl.clearColor(0.529, 0.808, 0.922, 1.0);
+  gl.clearColor(0.529, 0.808, 0.922, 0.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   //drawQuad();
+  // drawMouse();
   //drawRender();
-  // drawPeek(frameBuffers[1].texture)
+  drawPeek(frameBuffers[0].texture)
   //drawPeek(textures.background)
-  drawMouse();
+  
 };
 
 const updateAnimation = () => {
-  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[0].frameBuffer);
-  drawQuad();
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE)
 
-  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[1].frameBuffer);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[0].frameBuffer);
+  // drawWater();
+  drawQuad();
+  drawMouse();
 };
 
 const renderLoop = () => {
@@ -201,7 +228,7 @@ const getProgramAttribute = (program: WebGLProgram, key: string) => {
 
 const getUniformLocation = (program: WebGLProgram, key: string) => {
   const v = gl.getUniformLocation(program, key);
-  if (!(v >= 0)) console.error(key, v);
+  if (!v) console.error(key, v);
   return v;
 };
 
@@ -369,11 +396,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     programs.render.program,
     "vertex"
   );
-  programs.render.uniformBackground = getUniformLocation(
+  programs.render.samplerBackground = getUniformLocation(
     programs.render.program,
     "samplerBackground"
   );
-  programs.render.uniformWater = getUniformLocation(
+  programs.render.samplerWater = getUniformLocation(
     programs.render.program,
     "samplerWater"
   );
@@ -386,6 +413,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   programs.water.attributeVertex = getProgramAttribute(
     programs.water.program,
     "vertex"
+  );
+  programs.water.samplerPast = getUniformLocation(
+    programs.water.program,
+    "samplerPast"
   );
 
   shaders.mouse_frag = loadShaderFragment(await loadSourceCode("mouse.frag"));

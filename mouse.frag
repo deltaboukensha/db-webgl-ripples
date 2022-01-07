@@ -6,5 +6,6 @@ uniform vec2 mouse;
 
 void main() {
   float d = distance(mouse, st);
-  fragment = vec4((1.0 - d * 10.0), 0, 0, 1);
+  float a = (1.0 - d * 10.0);
+  fragment = vec4(a, 0, 0, a);
 }
