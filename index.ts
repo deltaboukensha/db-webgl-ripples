@@ -180,8 +180,8 @@ const renderFrame = () => {
 
   //drawQuad();
   // drawMouse();
-  //drawRender();
-  drawPeek(frameBuffers[0].texture);
+  drawRender();
+  //drawPeek(frameBuffers[0].texture);
   //drawPeek(textures.background)
 };
 
