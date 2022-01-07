@@ -20,8 +20,8 @@ const programs = {
   render: {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
-    uniformBackground: -1 as number,
-    uniformWater: -1 as number,
+    uniformBackground: -1 as WebGLUniformLocation,
+    uniformWater: -1 as WebGLUniformLocation,
   },
 };
 
@@ -37,14 +37,14 @@ const models = {
 };
 
 type FrameBuffer = {
-  frameBuffer: WebGLFramebuffer,
-  texture: WebGLTexture,
-}
-const frameBuffers = [] as FrameBuffer[]
+  frameBuffer: WebGLFramebuffer;
+  texture: WebGLTexture;
+};
+const frameBuffers = [] as FrameBuffer[];
 
 const textures = {
-  background: null as WebGLTexture
-}
+  background: null as WebGLTexture,
+};
 
 const drawQuad = () => {
   gl.useProgram(programs.quad.program);
@@ -92,15 +92,24 @@ const drawRender = () => {
 
 const renderFrame = () => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  
+
   gl.viewport(0, 0, canvasWidth, canvasHeight);
   gl.clearColor(0.529, 0.808, 0.922, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   //drawQuad();
   drawRender();
+};
 
-  window.requestAnimationFrame(renderFrame);
+const updateAnimation = () => {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[0].frameBuffer);
+  drawQuad();
+};
+
+const renderLoop = () => {
+  updateAnimation();
+  renderFrame();
+  window.requestAnimationFrame(renderLoop);
 };
 
 const loadSourceCode = (url: string) => {
@@ -197,7 +206,7 @@ const loadFrameBuffer = () => {
   const width = canvasWidth;
   const height = canvasHeight;
   const data = Array(width * height * 4) as number[];
-  data.fill(0, 0, data.length)
+  data.fill(0, 0, data.length);
 
   // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
   const texture = gl.createTexture();
@@ -233,13 +242,13 @@ const loadFrameBuffer = () => {
   return {
     frameBuffer,
     texture,
-  } as FrameBuffer
-}
+  } as FrameBuffer;
+};
 
 const loadImage = (url: string) => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const image = new Image();
-    image.onload = function() {
+    image.onload = function () {
       const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(
@@ -281,13 +290,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     programs.render.program,
     "vertex"
   );
-  programs.render.uniformBackground = getUniformLocation(programs.render.program, "samplerBackground");
-  programs.render.uniformWater = getUniformLocation(programs.render.program, "samplerWater");
+  programs.render.uniformBackground = getUniformLocation(
+    programs.render.program,
+    "samplerBackground"
+  );
+  programs.render.uniformWater = getUniformLocation(
+    programs.render.program,
+    "samplerWater"
+  );
 
   frameBuffers.push(loadFrameBuffer());
 
-  textures.background = await loadImage("background.jpg")
+  textures.background = await loadImage("background.jpg");
 
   document.body.appendChild(canvas);
-  window.requestAnimationFrame(renderFrame);
+  window.requestAnimationFrame(renderLoop);
 });

@@ -8,5 +8,5 @@ uniform sampler2D samplerWater;
 void main() {
   vec4 sampleBackground = texture(samplerBackground, vec2(st.s * 0.5 + 0.5, st.t * 0.5 + 0.5));
   vec4 sampleWater = texture(samplerWater, vec2(st.s * 0.5 + 0.5, st.t * 0.5 + 0.5));
-  fragment = sampleBackground;
+  fragment = sampleWater;
 }
