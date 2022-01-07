@@ -10,10 +10,16 @@ const shaders = {
   quad_vert: null as WebGLShader,
   quad_frag: null as WebGLShader,
   render_frag: null as WebGLShader,
+  water_frag: null as WebGLShader,
+  peek_frag: null as WebGLShader,
 };
 
 const programs = {
   quad: {
+    program: null as WebGLProgram,
+    attributeVertex: -1 as number,
+  },
+  peek: {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
   },
@@ -23,6 +29,10 @@ const programs = {
     uniformBackground: -1 as WebGLUniformLocation,
     uniformWater: -1 as WebGLUniformLocation,
   },
+  water: {
+    program: null as WebGLProgram,
+    attributeVertex: -1 as number,
+  }
 };
 
 type Model = {
@@ -55,6 +65,27 @@ const drawQuad = () => {
   const vertexAttribute = programs.quad.attributeVertex;
   gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(vertexAttribute);
+
+  gl.drawElements(
+    gl.TRIANGLES,
+    models.quad.dataIndices.length,
+    gl.UNSIGNED_SHORT,
+    0
+  );
+};
+
+const drawPeek = (texture: WebGLTexture) => {
+  gl.useProgram(programs.peek.program);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, models.quad.bufferIndices);
+
+  const vertexAttribute = programs.quad.attributeVertex;
+  gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(vertexAttribute);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
 
   gl.drawElements(
     gl.TRIANGLES,
@@ -98,12 +129,16 @@ const renderFrame = () => {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   //drawQuad();
-  drawRender();
+  //drawRender();
+  drawPeek(frameBuffers[1].texture)
+  drawPeek(textures.background)
 };
 
 const updateAnimation = () => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[0].frameBuffer);
   drawQuad();
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[1].frameBuffer);
 };
 
 const renderLoop = () => {
@@ -269,6 +304,11 @@ const loadImage = (url: string) => {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
+  frameBuffers.push(loadFrameBuffer());
+  frameBuffers.push(loadFrameBuffer());
+
+  textures.background = await loadImage("background.jpg");
+
   models.quad = loadModelQuad();
   shaders.quad_vert = loadShaderVertex(await loadSourceCode("quad.vert"));
   shaders.quad_frag = loadShaderFragment(await loadSourceCode("quad.frag"));
@@ -279,6 +319,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   programs.quad.attributeVertex = getProgramAttribute(
     programs.quad.program,
     "vertex"
+  );
+
+  shaders.peek_frag = loadShaderFragment(await loadSourceCode("peek.frag"));
+  programs.peek.program = loadShaderProgram(
+    shaders.quad_vert,
+    shaders.peek_frag
   );
 
   shaders.render_frag = loadShaderFragment(await loadSourceCode("render.frag"));
@@ -299,9 +345,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     "samplerWater"
   );
 
-  frameBuffers.push(loadFrameBuffer());
-
-  textures.background = await loadImage("background.jpg");
+  shaders.water_frag = loadShaderFragment(await loadSourceCode("water.frag"));
+  programs.water.program = loadShaderProgram(
+    shaders.quad_vert,
+    shaders.water_frag
+  );
 
   document.body.appendChild(canvas);
   window.requestAnimationFrame(renderLoop);
