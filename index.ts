@@ -63,7 +63,7 @@ const textures = {
   background: null as WebGLTexture,
 };
 
-const mouse = { x: 0, y: 0 };
+let mouseClick = null;
 
 const drawQuad = () => {
   gl.useProgram(programs.quad.program);
@@ -114,7 +114,7 @@ const drawMouse = () => {
   gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(vertexAttribute);
 
-  gl.uniform2f(programs.mouse.uniformMouse, mouse.x, mouse.y);
+  gl.uniform2f(programs.mouse.uniformMouse, mouseClick.x, mouseClick.y);
 
   gl.drawElements(
     gl.TRIANGLES,
@@ -180,8 +180,8 @@ const renderFrame = () => {
 
   //drawQuad();
   // drawMouse();
-  drawRender();
-  //drawPeek(frameBuffers[0].texture);
+  // drawRender();
+  drawPeek(frameBuffers[0].texture);
   //drawPeek(textures.background)
 };
 
@@ -195,10 +195,13 @@ const updateAnimation = () => {
   drawWater();
   //drawQuad();
 
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-  drawMouse();
-  gl.disable(gl.BLEND);
+  if (mouseClick) {
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    drawMouse();
+    gl.disable(gl.BLEND);
+    mouseClick = null;
+  }
 
   frameBuffers = [frameBuffers[1], frameBuffers[0]];
 };
@@ -443,7 +446,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.requestAnimationFrame(renderLoop);
 
   canvas.addEventListener("click", (e) => {
-    mouse.x = (+e.offsetX / canvasWidth - 0.5) * 2.0;
-    mouse.y = (-e.offsetY / canvasHeight + 0.5) * 2.0;
+    mouseClick = {
+      x: (+e.offsetX / canvasWidth - 0.5) * 2.0,
+      y: (-e.offsetY / canvasHeight + 0.5) * 2.0,
+    };
   });
 });

@@ -11,5 +11,5 @@ void main() {
   vec4 east = texture(samplerPast, vec2(st.s * 0.5 + 0.5 + e, st.t * 0.5 + 0.5));
   vec4 south = texture(samplerPast, vec2(st.s * 0.5 + 0.5, st.t * 0.5 + 0.5 - e));
   vec4 north = texture(samplerPast, vec2(st.s * 0.5 + 0.5, st.t * 0.5 + 0.5 + e));
-  fragment = (center + west) * 0.5;
+  fragment = (center + west + east + south + north) / 5.0;
 }
