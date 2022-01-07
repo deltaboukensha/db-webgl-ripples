@@ -1,0 +1,6 @@
+{
+  "include": ["index.ts"],
+  "compilerOptions": {
+    "lib": ["DOM", "ES2015"]
+  }
+}
