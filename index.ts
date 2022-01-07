@@ -9,9 +9,18 @@ const gl = canvas.getContext("webgl2");
 const shaders = {
   quad_vert: null as WebGLShader,
   quad_frag: null as WebGLShader,
+  render_frag: null as WebGLShader,
 };
+
 const programs = {
-  quad: null as WebGLProgram,
+  quad: {
+    program: null as WebGLProgram,
+    attributeVertex: -1 as number,
+  },
+  render: {
+    program: null as WebGLProgram,
+    attributeVertex: -1 as number,
+  },
 };
 const vertices = {};
 const indices = {};
@@ -27,13 +36,13 @@ const models = {
   quad: null as Model,
 };
 
-const renderQuad = () => {
-  gl.useProgram(programs.quad);
+const drawQuad = () => {
+  gl.useProgram(programs.quad.program);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, models.quad.bufferIndices);
 
-  const vertexAttribute = getProgramAttribute(programs.quad, "vertex");
+  const vertexAttribute = programs.quad.attributeVertex;
   gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(vertexAttribute);
 
@@ -45,54 +54,60 @@ const renderQuad = () => {
   );
 };
 
+const drawRender = () => {};
+
 const renderFrame = () => {
   gl.viewport(0, 0, canvasWidth, canvasHeight);
   gl.clearColor(0.529, 0.808, 0.922, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  renderQuad();
+  drawQuad();
+  drawRender();
 
   window.requestAnimationFrame(renderFrame);
 };
 
-const loadSourceCode = (url) => {
+const loadSourceCode = (url: string) => {
   return new Promise((resolve, reject) => {
-    var request = new XMLHttpRequest();
+    const request = new XMLHttpRequest();
     request.open("GET", url, true);
     request.onreadystatechange = function () {
       if (request.readyState == 4) {
         if (request.status !== 200) {
-          reject(request);
+          reject(request.response);
         }
 
         resolve(request.response);
       }
     };
     request.send(null);
-  });
+  }) as Promise<string>;
 };
 
-const getProgramAttribute = (program, key) => {
+const getProgramAttribute = (program: WebGLProgram, key: string) => {
   const v = gl.getAttribLocation(program, key);
   if (v === -1) console.error(key, v);
   return v;
 };
 
-const loadShaderVertex = (sourceCode) => {
+const loadShaderVertex = (sourceCode: string) => {
   const shader = gl.createShader(gl.VERTEX_SHADER);
   gl.shaderSource(shader, sourceCode);
   gl.compileShader(shader);
   return shader;
 };
 
-const loadShaderFragment = (sourceCode) => {
+const loadShaderFragment = (sourceCode: string) => {
   const shader = gl.createShader(gl.FRAGMENT_SHADER);
   gl.shaderSource(shader, sourceCode);
   gl.compileShader(shader);
   return shader;
 };
 
-const loadShaderProgram = (vertexShader, fragmentShader) => {
+const loadShaderProgram = (
+  vertexShader: WebGLShader,
+  fragmentShader: WebGLShader
+) => {
   const shaderProgram = gl.createProgram();
   gl.attachShader(shaderProgram, vertexShader);
   gl.attachShader(shaderProgram, fragmentShader);
@@ -140,7 +155,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   models.quad = loadModelQuad();
   shaders.quad_vert = loadShaderVertex(await loadSourceCode("quad.vert"));
   shaders.quad_frag = loadShaderFragment(await loadSourceCode("quad.frag"));
-  programs.quad = loadShaderProgram(shaders.quad_vert, shaders.quad_frag);
+  programs.quad.program = loadShaderProgram(
+    shaders.quad_vert,
+    shaders.quad_frag
+  );
+  programs.quad.attributeVertex = getProgramAttribute(
+    programs.quad.program,
+    "vertex"
+  );
+
+  shaders.render_frag = loadShaderFragment(await loadSourceCode("render.frag"));
+  programs.render.program = loadShaderProgram(
+    shaders.quad_vert,
+    shaders.render_frag
+  );
+
   document.body.appendChild(canvas);
   window.requestAnimationFrame(renderFrame);
 });
