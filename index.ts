@@ -174,7 +174,6 @@ const drawRender = () => {
 
 const renderFrame = () => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
   gl.viewport(0, 0, canvasWidth, canvasHeight);
   gl.clearColor(0.529, 0.808, 0.922, 0.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
@@ -184,17 +183,22 @@ const renderFrame = () => {
   //drawRender();
   drawPeek(frameBuffers[0].texture)
   //drawPeek(textures.background)
-  
 };
 
 const updateAnimation = () => {
-  gl.enable(gl.BLEND)
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE)
-
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[0].frameBuffer);
+  
+  gl.viewport(0, 0, canvasWidth, canvasHeight);
+  gl.clearColor(0.529, 0.808, 0.922, 0.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
   // drawWater();
   drawQuad();
+
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE)
   drawMouse();
+  gl.disable(gl.BLEND)
 };
 
 const renderLoop = () => {
