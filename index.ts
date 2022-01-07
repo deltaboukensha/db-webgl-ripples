@@ -57,7 +57,7 @@ type FrameBuffer = {
   frameBuffer: WebGLFramebuffer;
   texture: WebGLTexture;
 };
-const frameBuffers = [] as FrameBuffer[];
+let frameBuffers = [] as FrameBuffer[];
 
 const textures = {
   background: null as WebGLTexture,
@@ -136,7 +136,7 @@ const drawWater = () => {
 
   gl.uniform1i(programs.water.samplerPast, 0);
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, frameBuffers[0].texture);
+  gl.bindTexture(gl.TEXTURE_2D, frameBuffers[1].texture);
 
   gl.drawElements(
     gl.TRIANGLES,
@@ -181,24 +181,26 @@ const renderFrame = () => {
   //drawQuad();
   // drawMouse();
   //drawRender();
-  drawPeek(frameBuffers[0].texture)
+  drawPeek(frameBuffers[0].texture);
   //drawPeek(textures.background)
 };
 
 const updateAnimation = () => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[0].frameBuffer);
-  
+
   gl.viewport(0, 0, canvasWidth, canvasHeight);
-  gl.clearColor(0.529, 0.808, 0.922, 0.0);
+  gl.clearColor(0.0, 0.0, 0.0, 0.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // drawWater();
-  drawQuad();
+  drawWater();
+  //drawQuad();
 
-  gl.enable(gl.BLEND)
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE)
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
   drawMouse();
-  gl.disable(gl.BLEND)
+  gl.disable(gl.BLEND);
+
+  frameBuffers = [frameBuffers[1], frameBuffers[0]];
 };
 
 const renderLoop = () => {
