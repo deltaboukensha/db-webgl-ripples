@@ -1,6 +1,7 @@
 {
   "include": ["index.ts"],
   "compilerOptions": {
+    "target": "ES6",
     "lib": ["DOM", "ES2015"]
   }
 }

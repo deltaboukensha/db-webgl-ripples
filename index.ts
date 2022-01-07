@@ -12,6 +12,7 @@ const shaders = {
   render_frag: null as WebGLShader,
   water_frag: null as WebGLShader,
   peek_frag: null as WebGLShader,
+  mouse_frag: null as WebGLShader,
 };
 
 const programs = {
@@ -32,6 +33,11 @@ const programs = {
   water: {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
+  },
+  mouse: {
+    program: null as WebGLProgram,
+    attributeVertex: -1 as number,
+    uniformMouse: -1 as WebGLUniformLocation,
   }
 };
 
@@ -55,6 +61,8 @@ const frameBuffers = [] as FrameBuffer[];
 const textures = {
   background: null as WebGLTexture,
 };
+
+const mouse = { x: 0, y: 0 }
 
 const drawQuad = () => {
   gl.useProgram(programs.quad.program);
@@ -95,6 +103,27 @@ const drawPeek = (texture: WebGLTexture) => {
   );
 };
 
+const drawMouse = () => {
+  gl.useProgram(programs.mouse.program);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, models.quad.bufferIndices);
+
+  const vertexAttribute = programs.mouse.attributeVertex;
+  gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(vertexAttribute);
+
+  gl.uniform2f(programs.mouse.uniformMouse, mouse.x, mouse.y);
+
+  gl.drawElements(
+    gl.TRIANGLES,
+    models.quad.dataIndices.length,
+    gl.UNSIGNED_SHORT,
+    0
+  );
+};
+
+
 const drawRender = () => {
   gl.useProgram(programs.render.program);
 
@@ -130,8 +159,9 @@ const renderFrame = () => {
 
   //drawQuad();
   //drawRender();
-  drawPeek(frameBuffers[1].texture)
-  drawPeek(textures.background)
+  // drawPeek(frameBuffers[1].texture)
+  //drawPeek(textures.background)
+  drawMouse();
 };
 
 const updateAnimation = () => {
@@ -166,13 +196,13 @@ const loadSourceCode = (url: string) => {
 
 const getProgramAttribute = (program: WebGLProgram, key: string) => {
   const v = gl.getAttribLocation(program, key);
-  if (v === -1) console.error(key, v);
+  if (!(v >= 0)) console.error(key, v);
   return v;
 };
 
 const getUniformLocation = (program: WebGLProgram, key: string) => {
   const v = gl.getUniformLocation(program, key);
-  if (v === -1) console.error(key, v);
+  if (!(v >= 0)) console.error(key, v);
   return v;
 };
 
@@ -326,6 +356,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     shaders.quad_vert,
     shaders.peek_frag
   );
+  programs.peek.attributeVertex = getProgramAttribute(
+    programs.peek.program,
+    "vertex"
+  );
 
   shaders.render_frag = loadShaderFragment(await loadSourceCode("render.frag"));
   programs.render.program = loadShaderProgram(
@@ -350,7 +384,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     shaders.quad_vert,
     shaders.water_frag
   );
+  programs.water.attributeVertex = getProgramAttribute(
+    programs.water.program,
+    "vertex"
+  );
+
+  shaders.mouse_frag = loadShaderFragment(await loadSourceCode("mouse.frag"));
+  programs.mouse.program = loadShaderProgram(
+    shaders.quad_vert,
+    shaders.mouse_frag
+  );
+  programs.mouse.attributeVertex = getProgramAttribute(
+    programs.mouse.program,
+    "vertex"
+  );
+  programs.mouse.uniformMouse = getUniformLocation(
+    programs.mouse.program,
+    "mouse"
+  );
 
   document.body.appendChild(canvas);
   window.requestAnimationFrame(renderLoop);
+
+  canvas.addEventListener("click", e => {
+    mouse.x = ((+e.offsetX / canvasWidth) - 0.5) * 2.0
+    mouse.y = ((-e.offsetY / canvasHeight) + 0.5) * 2.0
+
+    console.log(mouse)
+  });
 });
