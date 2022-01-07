@@ -20,6 +20,8 @@ const programs = {
   render: {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
+    uniformBackground: -1 as number,
+    uniformWater: -1 as number,
   },
 };
 
@@ -72,8 +74,13 @@ const drawRender = () => {
   gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(vertexAttribute);
 
+  gl.uniform1i(programs.render.uniformBackground, 0);
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, textures.background);
+
+  gl.uniform1i(programs.render.uniformWater, 1);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, frameBuffers[0].texture);
 
   gl.drawElements(
     gl.TRIANGLES,
@@ -115,6 +122,12 @@ const loadSourceCode = (url: string) => {
 
 const getProgramAttribute = (program: WebGLProgram, key: string) => {
   const v = gl.getAttribLocation(program, key);
+  if (v === -1) console.error(key, v);
+  return v;
+};
+
+const getUniformLocation = (program: WebGLProgram, key: string) => {
+  const v = gl.getUniformLocation(program, key);
   if (v === -1) console.error(key, v);
   return v;
 };
@@ -268,6 +281,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     programs.render.program,
     "vertex"
   );
+  programs.render.uniformBackground = getUniformLocation(programs.render.program, "samplerBackground");
+  programs.render.uniformWater = getUniformLocation(programs.render.program, "samplerWater");
 
   frameBuffers.push(loadFrameBuffer());
 
