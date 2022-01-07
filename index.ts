@@ -22,8 +22,6 @@ const programs = {
     attributeVertex: -1 as number,
   },
 };
-const vertices = {};
-const indices = {};
 
 type Model = {
   bufferVertices: WebGLBuffer;
@@ -35,6 +33,12 @@ type Model = {
 const models = {
   quad: null as Model,
 };
+
+type FrameBuffer = {
+  frameBuffer: WebGLFramebuffer,
+  texture: WebGLTexture,
+}
+const frameBuffers = [] as FrameBuffer[]
 
 const drawQuad = () => {
   gl.useProgram(programs.quad.program);
@@ -73,6 +77,8 @@ const drawRender = () => {
 };
 
 const renderFrame = () => {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  
   gl.viewport(0, 0, canvasWidth, canvasHeight);
   gl.clearColor(0.529, 0.808, 0.922, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
@@ -167,6 +173,49 @@ const loadModelQuad = () => {
   return model;
 };
 
+const loadFrameBuffer = () => {
+  const width = canvasWidth;
+  const height = canvasHeight;
+  const data = Array(width * height * 4) as number[];
+  data.fill(0, 0, data.length)
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    width,
+    height,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    new Uint8Array(data),
+    0
+  );
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  const frameBuffer = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+
+  gl.framebufferTexture2D(
+    gl.FRAMEBUFFER,
+    gl.COLOR_ATTACHMENT0,
+    gl.TEXTURE_2D,
+    texture,
+    0
+  );
+
+  return {
+    frameBuffer,
+    texture,
+  } as FrameBuffer
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   models.quad = loadModelQuad();
   shaders.quad_vert = loadShaderVertex(await loadSourceCode("quad.vert"));
@@ -189,6 +238,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     programs.render.program,
     "vertex"
   );
+
+  frameBuffers.push(loadFrameBuffer());
 
   document.body.appendChild(canvas);
   window.requestAnimationFrame(renderFrame);
