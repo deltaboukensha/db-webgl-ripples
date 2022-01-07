@@ -38,7 +38,7 @@ const programs = {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
     uniformMouse: -1 as WebGLUniformLocation,
-  }
+  },
 };
 
 type Model = {
@@ -62,7 +62,7 @@ const textures = {
   background: null as WebGLTexture,
 };
 
-const mouse = { x: 0, y: 0 }
+const mouse = { x: 0, y: 0 };
 
 const drawQuad = () => {
   gl.useProgram(programs.quad.program);
@@ -122,7 +122,6 @@ const drawMouse = () => {
     0
   );
 };
-
 
 const drawRender = () => {
   gl.useProgram(programs.render.program);
@@ -406,10 +405,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.body.appendChild(canvas);
   window.requestAnimationFrame(renderLoop);
 
-  canvas.addEventListener("click", e => {
-    mouse.x = ((+e.offsetX / canvasWidth) - 0.5) * 2.0
-    mouse.y = ((-e.offsetY / canvasHeight) + 0.5) * 2.0
-
-    console.log(mouse)
+  canvas.addEventListener("click", (e) => {
+    mouse.x = (+e.offsetX / canvasWidth - 0.5) * 2.0;
+    mouse.y = (-e.offsetY / canvasHeight + 0.5) * 2.0;
   });
 });
