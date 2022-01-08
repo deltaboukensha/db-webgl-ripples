@@ -5,6 +5,8 @@ const canvas = document.createElement("canvas");
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
+const debugCheckbox = document.createElement("input");
+
 const gl = canvas.getContext("webgl2");
 const shaders = {
   quad_vert: null as WebGLShader,
@@ -29,6 +31,7 @@ const programs = {
     attributeVertex: -1 as number,
     samplerBackground: -1 as WebGLUniformLocation,
     samplerWater: -1 as WebGLUniformLocation,
+    debugFlag: -1 as WebGLUniformLocation,
   },
   water: {
     program: null as WebGLProgram,
@@ -169,6 +172,8 @@ const drawRender = () => {
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, frameBuffers[1].texture);
 
+  gl.uniform1i(programs.render.debugFlag, Number(debugCheckbox.checked));
+
   gl.drawElements(
     gl.TRIANGLES,
     models.quad.dataIndices.length,
@@ -181,9 +186,9 @@ const renderFrame = () => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
   //drawQuad();
-  // drawMouse();
+  //drawMouse();
   drawRender();
-  // drawPeek(frameBuffers[0].texture);
+  //drawPeek(frameBuffers[0].texture);
   //drawPeek(textures.background)
 };
 
@@ -201,7 +206,8 @@ const updateAnimation = () => {
 
     mouseClick.counter++;
 
-    if(mouseClick.counter > frameBuffers.length){
+    // draw the mouse on all frameBuffers to avoid flickering effect
+    if (mouseClick.counter > frameBuffers.length) {
       mouseClick = null;
     }
   }
@@ -417,6 +423,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     programs.render.program,
     "samplerWater"
   );
+  programs.render.debugFlag = getUniformLocation(
+    programs.render.program,
+    "debugFlag"
+  );
 
   shaders.water_frag = loadShaderFragment(await loadSourceCode("water.frag"));
   programs.water.program = loadShaderProgram(
@@ -451,9 +461,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   );
 
   document.body.appendChild(canvas);
+
+  {
+    debugCheckbox.type = "checkbox";
+    debugCheckbox.id = "debugCheckbox";
+    const div = document.createElement("div");
+    const label = document.createElement("label");
+    label.innerText = "Debug";
+    label.htmlFor = "debugCheckbox";
+    div.appendChild(debugCheckbox);
+    div.appendChild(label);
+    document.body.appendChild(div);
+  }
+
   window.requestAnimationFrame(renderLoop);
 
-  canvas.addEventListener("click", (e) => {
+  canvas.addEventListener("mousemove", (e) => {
     mouseClick = {
       x: (+e.offsetX / canvasWidth - 0.5) * 2.0,
       y: (-e.offsetY / canvasHeight + 0.5) * 2.0,
