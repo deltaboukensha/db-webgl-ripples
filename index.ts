@@ -34,6 +34,7 @@ const programs = {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
     samplerPast: -1 as WebGLUniformLocation,
+    samplerPast2: -1 as WebGLUniformLocation,
   },
   mouse: {
     program: null as WebGLProgram,
@@ -138,6 +139,10 @@ const drawWater = () => {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, frameBuffers[1].texture);
 
+  gl.uniform1i(programs.water.samplerPast2, 1);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, frameBuffers[2].texture);
+
   gl.drawElements(
     gl.TRIANGLES,
     models.quad.dataIndices.length,
@@ -162,7 +167,7 @@ const drawRender = () => {
 
   gl.uniform1i(programs.render.samplerWater, 1);
   gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, frameBuffers[0].texture);
+  gl.bindTexture(gl.TEXTURE_2D, frameBuffers[1].texture);
 
   gl.drawElements(
     gl.TRIANGLES,
@@ -174,23 +179,16 @@ const drawRender = () => {
 
 const renderFrame = () => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.viewport(0, 0, canvasWidth, canvasHeight);
-  gl.clearColor(0.529, 0.808, 0.922, 0.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
 
   //drawQuad();
   // drawMouse();
-  // drawRender();
-  drawPeek(frameBuffers[0].texture);
+  drawRender();
+  // drawPeek(frameBuffers[0].texture);
   //drawPeek(textures.background)
 };
 
 const updateAnimation = () => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffers[0].frameBuffer);
-
-  gl.viewport(0, 0, canvasWidth, canvasHeight);
-  gl.clearColor(0.0, 0.0, 0.0, 0.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
 
   drawWater();
   //drawQuad();
@@ -200,10 +198,10 @@ const updateAnimation = () => {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     drawMouse();
     gl.disable(gl.BLEND);
-    mouseClick = null;
+    // mouseClick = null;
   }
 
-  frameBuffers = [frameBuffers[1], frameBuffers[0]];
+  frameBuffers = [frameBuffers[2], frameBuffers[0], frameBuffers[1]];
 };
 
 const renderLoop = () => {
@@ -371,6 +369,7 @@ const loadImage = (url: string) => {
 document.addEventListener("DOMContentLoaded", async () => {
   frameBuffers.push(loadFrameBuffer());
   frameBuffers.push(loadFrameBuffer());
+  frameBuffers.push(loadFrameBuffer());
 
   textures.background = await loadImage("background.jpg");
 
@@ -426,6 +425,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   programs.water.samplerPast = getUniformLocation(
     programs.water.program,
     "samplerPast"
+  );
+  programs.water.samplerPast2 = getUniformLocation(
+    programs.water.program,
+    "samplerPast2"
   );
 
   shaders.mouse_frag = loadShaderFragment(await loadSourceCode("mouse.frag"));
