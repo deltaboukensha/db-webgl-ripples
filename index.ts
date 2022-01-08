@@ -33,8 +33,8 @@ const programs = {
   water: {
     program: null as WebGLProgram,
     attributeVertex: -1 as number,
-    samplerPast: -1 as WebGLUniformLocation,
-    samplerPast2: -1 as WebGLUniformLocation,
+    sampler1: -1 as WebGLUniformLocation,
+    sampler2: -1 as WebGLUniformLocation,
   },
   mouse: {
     program: null as WebGLProgram,
@@ -135,11 +135,11 @@ const drawWater = () => {
   gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(vertexAttribute);
 
-  gl.uniform1i(programs.water.samplerPast, 0);
+  gl.uniform1i(programs.water.sampler1, 0);
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, frameBuffers[1].texture);
 
-  gl.uniform1i(programs.water.samplerPast2, 1);
+  gl.uniform1i(programs.water.sampler2, 1);
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, frameBuffers[2].texture);
 
@@ -422,13 +422,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     programs.water.program,
     "vertex"
   );
-  programs.water.samplerPast = getUniformLocation(
+  programs.water.sampler1 = getUniformLocation(
     programs.water.program,
-    "samplerPast"
+    "sampler1"
   );
-  programs.water.samplerPast2 = getUniformLocation(
+  programs.water.sampler2 = getUniformLocation(
     programs.water.program,
-    "samplerPast2"
+    "sampler2"
   );
 
   shaders.mouse_frag = loadShaderFragment(await loadSourceCode("mouse.frag"));
