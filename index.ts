@@ -198,7 +198,12 @@ const updateAnimation = () => {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     drawMouse();
     gl.disable(gl.BLEND);
-    // mouseClick = null;
+
+    mouseClick.counter++;
+
+    if(mouseClick.counter > frameBuffers.length){
+      mouseClick = null;
+    }
   }
 
   frameBuffers = [frameBuffers[2], frameBuffers[0], frameBuffers[1]];
@@ -452,6 +457,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     mouseClick = {
       x: (+e.offsetX / canvasWidth - 0.5) * 2.0,
       y: (-e.offsetY / canvasHeight + 0.5) * 2.0,
+      counter: 0,
     };
   });
 });
