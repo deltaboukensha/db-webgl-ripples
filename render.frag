@@ -7,8 +7,7 @@ uniform sampler2D samplerWater;
 
 void main() {
   vec4 sampleWater = texture(samplerWater, vec2(st.s * 0.5 + 0.5, st.t * 0.5 + 0.5));
-  float offset = sampleWater.r * 0.1;
+  float offset = sampleWater.r * 0.05;
   vec4 sampleBackground = texture(samplerBackground, vec2(st.s * 0.5 + 0.5 + offset, st.t * 0.5 + 0.5 + offset));
-  
-  fragment = sampleBackground;
+  fragment = sampleWater;
 }
