@@ -1,11 +1,13 @@
 const canvasWidth = 512;
 const canvasHeight = 512;
-
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
 const debugFlag = document.getElementById("debugFlag") as HTMLInputElement;
+const waveVelocity = document.getElementById(
+  "waveVelocity"
+) as HTMLInputElement;
 
 const gl = canvas.getContext("webgl2");
 const shaders = {
@@ -38,6 +40,7 @@ const programs = {
     attributeVertex: -1 as number,
     sampler1: -1 as WebGLUniformLocation,
     sampler2: -1 as WebGLUniformLocation,
+    waveVelocity: -1 as WebGLUniformLocation,
   },
   mouse: {
     program: null as WebGLProgram,
@@ -146,6 +149,8 @@ const drawWater = () => {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, frameBuffers[2].texture);
 
+  gl.uniform1f(programs.water.waveVelocity, waveVelocity.valueAsNumber);
+
   gl.drawElements(
     gl.TRIANGLES,
     models.quad.dataIndices.length,
@@ -198,18 +203,13 @@ const updateAnimation = () => {
   drawWater();
   //drawQuad();
 
+  // maybe? draw the mouse on all frameBuffers to avoid flickering effect
   if (mouseClick) {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     drawMouse();
     gl.disable(gl.BLEND);
-
-    mouseClick.counter++;
-
-    // draw the mouse on all frameBuffers to avoid flickering effect
-    if (mouseClick.counter > frameBuffers.length) {
-      mouseClick = null;
-    }
+    mouseClick = null;
   }
 
   frameBuffers = [frameBuffers[2], frameBuffers[0], frameBuffers[1]];
@@ -368,8 +368,8 @@ const loadImage = (url: string) => {
         gl.UNSIGNED_BYTE,
         image
       );
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       resolve(texture);
     };
@@ -445,6 +445,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     programs.water.program,
     "sampler2"
   );
+  programs.water.waveVelocity = getUniformLocation(
+    programs.water.program,
+    "waveVelocity"
+  );
 
   shaders.mouse_frag = loadShaderFragment(await loadSourceCode("mouse.frag"));
   programs.mouse.program = loadShaderProgram(
@@ -466,7 +470,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     mouseClick = {
       x: (+e.offsetX / canvasWidth - 0.5) * 2.0,
       y: (-e.offsetY / canvasHeight + 0.5) * 2.0,
-      counter: 0,
     };
   });
 });
