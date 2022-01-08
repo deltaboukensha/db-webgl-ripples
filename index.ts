@@ -1,11 +1,11 @@
 const canvasWidth = 512;
 const canvasHeight = 512;
 
-const canvas = document.createElement("canvas");
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
-const debugCheckbox = document.createElement("input");
+const debugFlag = document.getElementById("debugFlag") as HTMLInputElement;
 
 const gl = canvas.getContext("webgl2");
 const shaders = {
@@ -172,7 +172,7 @@ const drawRender = () => {
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, frameBuffers[1].texture);
 
-  gl.uniform1i(programs.render.debugFlag, Number(debugCheckbox.checked));
+  gl.uniform1i(programs.render.debugFlag, Number(debugFlag.checked));
 
   gl.drawElements(
     gl.TRIANGLES,
@@ -459,20 +459,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     programs.mouse.program,
     "mouse"
   );
-
-  document.body.appendChild(canvas);
-
-  {
-    debugCheckbox.type = "checkbox";
-    debugCheckbox.id = "debugCheckbox";
-    const div = document.createElement("div");
-    const label = document.createElement("label");
-    label.innerText = "Debug";
-    label.htmlFor = "debugCheckbox";
-    div.appendChild(debugCheckbox);
-    div.appendChild(label);
-    document.body.appendChild(div);
-  }
 
   window.requestAnimationFrame(renderLoop);
 
