@@ -1,7 +1,19 @@
 {
-  "include": ["index.ts"],
+  "include": ["src/index.ts"],
   "compilerOptions": {
     "target": "ES6",
-    "lib": ["DOM", "ES2015"]
-  }
+    "lib": ["DOM", "ES2015"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve"
+  },
+  "exclude": ["node_modules"]
 }

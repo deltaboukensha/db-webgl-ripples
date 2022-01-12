@@ -2,4 +2,4 @@
 .firebase
 .next
 node_modules
-index.js
+public
