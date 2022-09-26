@@ -23,40 +23,43 @@ const useWebGl = (initFunction, updateFunction, dependencies) => {
 
 const initGame = async (canvas: HTMLCanvasElement) => {
   const gl = canvas.getContext("webgl2");
+
+  if(!gl) throw "gl is not supported";
+
   const shaders = {
-    quad_vert: null as WebGLShader,
-    quad_frag: null as WebGLShader,
-    render_frag: null as WebGLShader,
-    water_frag: null as WebGLShader,
-    peek_frag: null as WebGLShader,
-    mouse_frag: null as WebGLShader,
+    quad_vert: null as WebGLShader | null,
+    quad_frag: null as WebGLShader | null,
+    render_frag: null as WebGLShader | null,
+    water_frag: null as WebGLShader | null,
+    peek_frag: null as WebGLShader | null,
+    mouse_frag: null as WebGLShader | null,
   };
 
   const programs = {
     quad: {
-      program: null as WebGLProgram,
+      program: null as WebGLProgram | null,
       attributeVertex: -1 as number,
     },
     peek: {
-      program: null as WebGLProgram,
+      program: null as WebGLProgram | null,
       attributeVertex: -1 as number,
     },
     render: {
-      program: null as WebGLProgram,
+      program: null as WebGLProgram | null,
       attributeVertex: -1 as number,
       samplerBackground: -1 as WebGLUniformLocation,
       samplerWater: -1 as WebGLUniformLocation,
       debugFlag: -1 as WebGLUniformLocation,
     },
     water: {
-      program: null as WebGLProgram,
+      program: null as WebGLProgram | null,
       attributeVertex: -1 as number,
       sampler1: -1 as WebGLUniformLocation,
       sampler2: -1 as WebGLUniformLocation,
       waveVelocity: -1 as WebGLUniformLocation,
     },
     mouse: {
-      program: null as WebGLProgram,
+      program: null as WebGLProgram | null,
       attributeVertex: -1 as number,
       uniformMouse: -1 as WebGLUniformLocation,
     },
@@ -70,7 +73,7 @@ const initGame = async (canvas: HTMLCanvasElement) => {
   };
 
   const models = {
-    quad: null as Model,
+    quad: null as Model | null,
   };
 
   type FrameBuffer = {
@@ -80,12 +83,16 @@ const initGame = async (canvas: HTMLCanvasElement) => {
   let frameBuffers = [] as FrameBuffer[];
 
   const textures = {
-    background: null as WebGLTexture,
+    background: null as WebGLTexture | null,
   };
 
-  let mouseClick = null;
+  let mouseClick = null as {
+    x: number, y: number
+  } | null;
 
   const drawQuad = () => {
+    if(!models.quad) return;
+
     gl.useProgram(programs.quad.program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
@@ -104,6 +111,8 @@ const initGame = async (canvas: HTMLCanvasElement) => {
   };
 
   const drawPeek = (texture: WebGLTexture) => {
+    if(!models.quad) return;
+
     gl.useProgram(programs.peek.program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
@@ -125,6 +134,9 @@ const initGame = async (canvas: HTMLCanvasElement) => {
   };
 
   const drawMouse = () => {
+    if(!models.quad) return;
+    if(!mouseClick) return;
+
     gl.useProgram(programs.mouse.program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
@@ -145,6 +157,8 @@ const initGame = async (canvas: HTMLCanvasElement) => {
   };
 
   const drawWater = () => {
+    if(!models.quad) return;
+
     gl.useProgram(programs.water.program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
@@ -173,6 +187,8 @@ const initGame = async (canvas: HTMLCanvasElement) => {
   };
 
   const drawRender = () => {
+    if(!models.quad) return;
+
     gl.useProgram(programs.render.program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, models.quad.bufferVertices);
@@ -265,6 +281,8 @@ const initGame = async (canvas: HTMLCanvasElement) => {
 
   const loadShaderVertex = (sourceCode: string) => {
     const shader = gl.createShader(gl.VERTEX_SHADER);
+    if(!shader) throw "could not create shader";
+
     gl.shaderSource(shader, sourceCode);
     gl.compileShader(shader);
     return shader;
@@ -272,6 +290,8 @@ const initGame = async (canvas: HTMLCanvasElement) => {
 
   const loadShaderFragment = (sourceCode: string) => {
     const shader = gl.createShader(gl.FRAGMENT_SHADER);
+    if(!shader) throw "could not create shader";
+
     gl.shaderSource(shader, sourceCode);
     gl.compileShader(shader);
     return shader;
@@ -282,6 +302,8 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     fragmentShader: WebGLShader
   ) => {
     const shaderProgram = gl.createProgram();
+    if(!shaderProgram) throw "could not create program";
+
     gl.attachShader(shaderProgram, vertexShader);
     gl.attachShader(shaderProgram, fragmentShader);
     gl.linkProgram(shaderProgram);
@@ -300,6 +322,8 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     const dataIndices = [0, 2, 1, 3, 2, 1];
 
     const bufferVertices = gl.createBuffer();
+    if(!bufferVertices) throw "could not create bufferVertices";
+
     gl.bindBuffer(gl.ARRAY_BUFFER, bufferVertices);
     gl.bufferData(
       gl.ARRAY_BUFFER,
@@ -308,6 +332,8 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     );
 
     const bufferIndices = gl.createBuffer();
+    if(!bufferIndices) throw "could not create bufferIndices";
+
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferIndices);
     gl.bufferData(
       gl.ELEMENT_ARRAY_BUFFER,
