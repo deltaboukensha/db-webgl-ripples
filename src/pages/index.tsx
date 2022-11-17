@@ -50,6 +50,7 @@ const initGame = async (canvas: HTMLCanvasElement) => {
       samplerBackground: -1 as WebGLUniformLocation,
       samplerWater: -1 as WebGLUniformLocation,
       debugFlag: -1 as WebGLUniformLocation,
+      grid: -1 as WebGLUniformLocation,
     },
     water: {
       program: null as WebGLProgram | null,
@@ -89,6 +90,12 @@ const initGame = async (canvas: HTMLCanvasElement) => {
   let mouseClick = null as {
     x: number, y: number
   } | null;
+
+  let gridData = [
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0,
+  ];
 
   const drawQuad = () => {
     if(!models.quad) return;
@@ -207,6 +214,7 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     gl.bindTexture(gl.TEXTURE_2D, frameBuffers[1].texture);
 
     gl.uniform1i(programs.render.debugFlag, Number(canvas.args.waveDebug));
+    gl.uniform1fv(programs.render.grid, new Float32Array([...gridData]), 0, gridData.length);
 
     gl.drawElements(
       gl.TRIANGLES,
@@ -465,6 +473,10 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     programs.render.program,
     "debugFlag"
   );
+  programs.render.grid = getUniformLocation(
+    programs.render.program,
+    "grid"
+  );
 
   shaders.water_frag = loadShaderFragment(await loadSourceCode("water.frag"));
   programs.water.program = loadShaderProgram(
@@ -504,11 +516,35 @@ const initGame = async (canvas: HTMLCanvasElement) => {
 
   window.requestAnimationFrame(renderLoop);
 
-  canvas.addEventListener("mousemove", (e) => {
+  canvas.addEventListener("click", (e) => {
+    console.log(e, e.x, e.y);
     mouseClick = {
       x: (+e.offsetX / canvasWidth - 0.5) * 2.0,
       y: (-e.offsetY / canvasHeight + 0.5) * 2.0,
     };
+
+    const index = Math.floor(e.x / 512.0 * 3.0) + Math.floor(e.y / 512.0 * 3.0) * 3;
+    gridData[index] = Date.now();
+    console.log({ gridData });
+
+    if(!gridData.some(i => i === 0)){
+      console.log("filled");
+
+      const removeLastClicked = () => {
+        console.log("removeLastClicked");
+        const highestValue = [...gridData].sort().reverse().at(0);
+        console.log({highestValue});
+        const removeIndex = gridData.findIndex(i => i === highestValue);
+        console.log({removeIndex});
+        gridData[removeIndex] = 0;
+
+        if(gridData.some(i => i !== 0)){
+          setTimeout(removeLastClicked, 1000);  
+        }
+      };
+
+      setTimeout(removeLastClicked, 1000);
+    }
   });
 };
 
@@ -533,7 +569,6 @@ const index = () => {
 
   return (
     <>
-      <h1>WebGL Ripples</h1>
       {GameCanvas(waveDebug, waveVelocity)}
       <Box>
         <FormControlLabel
