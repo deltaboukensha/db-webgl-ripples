@@ -39,6 +39,7 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     quad: {
       program: null as WebGLProgram | null,
       attributeVertex: -1 as number,
+      uniformMouse: -1 as WebGLUniformLocation,
     },
     peek: {
       program: null as WebGLProgram | null,
@@ -101,6 +102,10 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     const vertexAttribute = programs.quad.attributeVertex;
     gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vertexAttribute);
+
+    console.log("XXXX", { mouseClick });
+    console.log(programs.quad.uniformMouse, mouseClick?.x ?? 0, mouseClick?.y ?? 0)
+    gl.uniform2f(programs.quad.uniformMouse, mouseClick?.x ?? 0, mouseClick?.y ?? 0);
 
     gl.drawElements(
       gl.TRIANGLES,
@@ -219,9 +224,9 @@ const initGame = async (canvas: HTMLCanvasElement) => {
   const renderFrame = () => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    //drawQuad();
+    drawQuad();
     //drawMouse();
-    drawRender();
+    // drawRender();
     //drawPeek(frameBuffers[0].texture);
     //drawPeek(textures.background)
   };
@@ -233,13 +238,13 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     //drawQuad();
 
     // maybe? draw the mouse on all frameBuffers to avoid flickering effect
-    if (mouseClick) {
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-      drawMouse();
-      gl.disable(gl.BLEND);
-      mouseClick = null;
-    }
+    // if (mouseClick) {
+    //   gl.enable(gl.BLEND);
+    //   gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    //   drawMouse();
+    //   gl.disable(gl.BLEND);
+    //   mouseClick = null;
+    // }
 
     frameBuffers = [frameBuffers[2], frameBuffers[0], frameBuffers[1]];
   };
@@ -433,6 +438,12 @@ const initGame = async (canvas: HTMLCanvasElement) => {
     programs.quad.program,
     "vertex"
   );
+  programs.quad.uniformMouse = getUniformLocation(
+    programs.quad.program,
+    "mouse"
+  );
+  console.log("programs.quad.program", programs.quad.program);
+  console.log("programs.quad.uniformMouse", programs.quad.uniformMouse);
 
   shaders.peek_frag = loadShaderFragment(await loadSourceCode("peek.frag"));
   programs.peek.program = loadShaderProgram(
@@ -509,6 +520,7 @@ const initGame = async (canvas: HTMLCanvasElement) => {
       x: (+e.offsetX / canvasWidth - 0.5) * 2.0,
       y: (-e.offsetY / canvasHeight + 0.5) * 2.0,
     };
+    console.log({ mouseClick });
   });
 };
 
